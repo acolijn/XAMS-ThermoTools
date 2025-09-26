@@ -1,0 +1,7 @@
+LICENSE
+README.md
+pyproject.toml
+python/xams.egg-info/PKG-INFO
+python/xams.egg-info/SOURCES.txt
+python/xams.egg-info/dependency_links.txt
+python/xams.egg-info/top_level.txt

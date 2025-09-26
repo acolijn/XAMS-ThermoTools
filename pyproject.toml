@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xams"
+version = "0.1.0"
+description = "Flow, pressure drop and thermodynamic tools for XAMS"
+authors = [
+  { name = "Auke Colijn", email = "z37@nikhef.nl" }
+]
+readme = "README.md"
+requires-python = ">=3.9"
+
+[tool.setuptools.packages.find]
+where = ["python"]
