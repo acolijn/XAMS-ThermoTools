@@ -119,50 +119,63 @@ class SlowControlLog:
             sel = sel.resample(resample).mean()
         return sel
     
-    def plot(self, column: str, start: Optional[Union[str, pd.Timestamp]] = None,
-             end: Optional[Union[str, pd.Timestamp]] = None, resample: Optional[str] = None,
-             engine: str = "matplotlib"):
+    def plot(self, column: Union[str, List[str]],
+            start: Optional[Union[str, pd.Timestamp]] = None,
+            end: Optional[Union[str, pd.Timestamp]] = None,
+            resample: Optional[str] = None,
+            engine: str = "matplotlib"):
         """
-        Plot a single variable vs time.
+        Plot one or many variables vs time.
 
         Parameters
         ----------
-        column : str
-            Column to plot.
+        column : str | list[str]
+            Column name or list of column names to plot.
         start, end : str | pandas.Timestamp | None
             Optional time window.
         resample : str | None
             Pandas offset alias (e.g. '5min') to average over time bins.
         engine : {'matplotlib','plotly'}
-            - 'matplotlib' (default): returns a Matplotlib Axes. Zoom via toolbar / %matplotlib notebook.
-            - 'plotly': returns a Plotly Figure with scroll/pan/box-zoom built-in.
+            - 'matplotlib' (default): returns a Matplotlib Axes.
+            - 'plotly': returns a Plotly Figure (zoom/pan/hover enabled).
         """
-        series = self.select(column, start, end, resample)[column]
+        # Normalize to a list of columns
+        cols = [column] if isinstance(column, str) else list(column)
+        df = self.select(cols, start, end, resample)
 
         if engine == "plotly":
             try:
                 import plotly.express as px
             except Exception as e:
-                raise RuntimeError("Plotly is required for engine='plotly'. Install with `pip install plotly`.") from e
-            # When plotting multiple columns
-            df = self.select(columns, start, end, resample)
+                raise RuntimeError(
+                    "Plotly is required for engine='plotly'. Install with `pip install plotly`."
+                ) from e
 
             fig = px.line(
                 df,
                 x=df.index,
-                y=df.columns,
+                y=df.columns,                       # plot all requested columns
                 title=", ".join(df.columns) + " vs Time",
-                labels={"x": "Time", "value": "Value", "variable": "Channel"}
+                labels={"x": "Time", "value": "Value", "variable": "Channel"},
             )
             fig.update_layout(hovermode="x unified")
             return fig
+
+        # Matplotlib branch
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        if len(df.columns) == 1:
+            df.iloc[:, 0].plot(ax=ax)
+            ax.set_ylabel(df.columns[0])
         else:
-            fig, ax = plt.subplots()
-            series.plot(ax=ax)
-            ax.set_xlabel("Time")
-            ax.set_ylabel(column)
-            ax.set_title(f"{column} vs Time")
-            fig.tight_layout()
-            return ax
+            for c in df.columns:
+                ax.plot(df.index, df[c], label=c)
+            ax.legend(loc="best")
+            ax.set_ylabel(", ".join(df.columns))
+
+        ax.set_xlabel("Time")
+        ax.set_title(", ".join(df.columns) + " vs Time")
+        fig.tight_layout()
+        return ax
 
 
