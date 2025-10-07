@@ -255,6 +255,33 @@ def solve_open_case(p_in_bar_abs: float, p_out_bar_abs: float, segs: List[Segmen
         "dp_bar": dp_bar,
     }
 
+def mdot_from_slpm(Q_slpm: float,
+                   M_kg_per_mol: float = 0.13129,
+                   T_std: float = 273.15,
+                   p_std: float = 101325.0) -> float:
+    """
+    Mass flow (kg/s) from SLPM at specified standard conditions.
+    Defaults: STP = 0°C, 1 atm.
+    """
+    R_u = 8.314  # J/(mol·K), universal gas constant
+    Q_m3_s = Q_slpm / 1000.0 / 60.0
+    rho_std = (p_std * M_kg_per_mol) / (R_u * T_std)  # ideal-gas density at STANDARD conditions
+    return rho_std * Q_m3_s
+
+def mdot_from_lpm_actual(Q_L_min: float,
+                         p_bar_abs: float,
+                         T_K: float,
+                         M_kg_per_mol: float = 0.13129) -> float:
+    """
+    Mass flow (kg/s) from ACTUAL LPM at actual p,T.
+    Use this only when the flow is not standardized.
+    """
+    R_u = 8.314  # J/(mol·K), universal gas constant
+    Q_m3_s = Q_L_min / 1000.0 / 60.0
+    p_Pa = p_bar_abs * 1e5
+    rho = (p_Pa * M_kg_per_mol) / (R_u * T_K)
+    return rho * Q_m3_s
+
 # =================
 # Optional: __main__
 # =================
